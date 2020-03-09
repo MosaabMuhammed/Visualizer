@@ -1,0 +1,4 @@
+include LICENSE
+recursive-include input *.csv
+recursive-include src *.py
+recursive-include testing *.ipynb
