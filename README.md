@@ -1,4 +1,27 @@
 # Visualizer:
+A Python package that automate the process of visualization in the data science pipeline.
+
+## Installation:
+```python
+pip install visualizer
+```
+
+## Usage:
+```
+import pandas as pd
+from visualizer import Visualizer
+
+# Set the paramters
+df         = pd.read_csv("path/to/your/csv/file")
+target_col = df['target_col']
+path       = "path/where/you/want/to/save/the/images"
+
+# Set the visualizer's parameters.
+vis = Visualizer(df=df, path=path, target_col=target_col)
+
+# Let the visualizer do all the work for you.
+vis.visualizer_all()
+```
 
 ## Further Ideas:
 
