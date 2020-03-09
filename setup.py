@@ -12,6 +12,7 @@ setup(
     url="https://github.com/MosaabMuhammed/visualizer",
     author="Mosaab Muhammad",
     author_email="mosaabmuhammed@outlook.com",
+    license="MIT",
     py_modules=["visualizer"],
     package_dir={'': 'src'},
     packages=find_packages(),
@@ -20,5 +21,11 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent"
     ],
+    install_requires=["matplotlib",
+                      "seaborn",
+                      "wordcloud",
+                      "pandas",
+                      "math",
+                      "sklearn"]
     python_requires='>=3.6'
 )
