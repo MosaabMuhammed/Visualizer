@@ -1,16 +1,6 @@
-# shape function
-# reduce_mem_usage function
-# summary
-# show_annotation bg: to color
-# read_feather:
-# write_feather:
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 from termcolor import colored
-import inspect
 import operator as op
+import os
 from functools import reduce
 
 #####################################
@@ -44,4 +34,15 @@ def ncr(n, r):
     r = min(r, n-r)
     numer = reduce(op.mul, range(n, n-r, -1), 1)
     denom = reduce(op.mul, range(1, r+1), 1)
-    return numer // denom   
+    return numer // denom
+
+#####################################
+#            Create Folder          #
+#####################################
+def create_folder(folder_name, verbose=True):
+    # Create visulizer Directory if don't exist
+    if not os.path.exists(os.path.join(os.getcwd(), folder_name)):
+        os.makedirs(os.path.join(os.getcwd(), folder_name))
+        if verbose: print("Directory " , folder_name ,  " Created ")
+    else:    
+        if verbose: print("Directory " , folder_name ,  " already exists")
