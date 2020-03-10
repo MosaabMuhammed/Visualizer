@@ -34,15 +34,6 @@ class Visualizer:
         if col in self.num_cols: self.num_cols.remove(col)
         if col in self.cat_cols: self.cat_cols.remove(col)
 
-
-  def create_folder(self, folder_name, verbose=True):
-    # Create visulizer Directory if don't exist
-    if not os.path.exists(os.path.join(os.getcwd(), folder_name)):
-      os.makedirs(os.path.join(os.getcwd(), folder_name))
-      if verbose: print("Directory " , folder_name ,  " Created ")
-    else:    
-      if verbose: print("Directory " , folder_name ,  " already exists")
-
   ############################ Count Plot (Cat)
   @staticmethod
   def create_countplot(df, col_name, figsize=(8, 6), annot=True, rotate=False, folder_name=None):
@@ -363,66 +354,77 @@ class Visualizer:
       plt.show()
 
 ######################################## Parallel Plot (Multi-Num with Cat)
-  def create_parallel_plot(self):
+  @staticmethod
+  def create_parallel_plot(df, num_cols, target_col=None, figsize=(20, 10), folder_name=None):
     scaler = MinMaxScaler()
-    df_scaled = scaler.fit_transform(self.df[self.num_cols])
-    df_scaled = pd.DataFrame(df_scaled, columns=self.num_cols)
+    df_scaled = scaler.fit_transform(df[num_cols])
+    df_scaled = pd.DataFrame(df_scaled, columns=num_cols)
     
     # Make the plot
-    if self.problem_type == "classification":
-        df_scaled[self.target_col] = self.df[self.target_col]
-        for i in [10, 50, 100, 500, 1000]:
-          fig = plt.figure(figsize=(20, 10)) 
-          parallel_coordinates(df_scaled.sample(i), self.target_col, lw=2, colormap=plt.get_cmap("winter"))
-          plt.savefig(os.path.join(os.getcwd(), "visualizer", "8_multi_variate", "1_parallel_plot", f"{i}_parallel_plot.png"), bbox_inches='tight')
+    if target_col:
+      df_scaled[target_col] = df[target_col]
     else:
-        df_scaled['regression'] = 0
-        for i in [10, 50, 100, 500, 1000]:
-          fig = plt.figure(figsize=(20, 10))
-          parallel_coordinates(df_scaled.sample(i), 'regression', lw=2, colormap=plt.get_cmap("winter"))
-          plt.savefig(os.path.join(os.getcwd(), "visualizer", "8_multi_variate", "1_parallel_plot", f"{i}_parallel_plot.png"), bbox_inches='tight')
+      df_scaled['regression'] = 0
+
+    for i in [10, 50, 100, 500, 1000]:
+      fig = plt.figure(figsize=figsize) 
+      parallel_coordinates(df_scaled.sample(i),
+                           target_col if target_col else 'regression',
+                           lw=2, 
+                           colormap=plt.get_cmap("winter"))
+      plt.title(f"{i} samples with target", y=1.05, size=20)
+
+      if folder_name:
+        plt.ioff()
+        plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{i}_parallel_plot.png"), bbox_inches='tight')
+        plt.close(fig)
+      else:
+        plt.show()
 
 
   ############################################ Radar Plot
-  def create_radar_plot(self):
-    scaler = MinMaxScaler()
-    df_scaled = scaler.fit_transform(self.df[self.num_cols])
-    df_scaled = pd.DataFrame(df_scaled, columns=self.num_cols)
-    df_scaled[self.cat_cols] = self.df[self.cat_cols]
+  @staticmethod
+  def create_radar_plot(df, num_cols, cat_col, figsize=(20, 20), folder_name=None):
+    scaler             = MinMaxScaler()
+    df_scaled          = scaler.fit_transform(df[num_cols])
+    df_scaled          = pd.DataFrame(df_scaled, columns=num_cols)
+    df_scaled[cat_col] = df[cat_col]
+    df_scaled          = df_scaled.loc[:,~df_scaled.columns.duplicated()]
 
-    n_cat_cols = len(self.cat_cols)
-    for i, cat_col in enumerate(self.cat_cols):
-      if len(self.df[cat_col].unique()) <= 27:
-        print(f'\r{bg("Multi-variate cat col label", "s", "green")}: finished {bg(i+1, color="yellow")} out of {n_cat_cols}', end='')
-        self.create_folder(os.path.join("8_multi_variate", "2_radar_plot", f"{cat_col}"), verbose=False)
-        grouped_df = df_scaled.groupby(cat_col)[self.num_cols].mean()
-        categories = grouped_df[self.num_cols].columns
-        N          = len(categories)
+    grouped_df = df_scaled.groupby(cat_col)[num_cols].median()
+    categories = grouped_df[num_cols].columns
+    N          = len(categories)
 
-        for label in list(self.df[cat_col].unique()):
-          values  = grouped_df.loc[label].values.flatten().tolist()
-          values += values[:1]
+    for i, label in enumerate(df[cat_col].unique()):
+      values  = grouped_df.loc[label].values.flatten().tolist()
+      values += values[:1]
 
-          angles  = [n / float(N) * 2 * pi for n in range(N)]
-          angles += angles[:1]
+      angles  = [n / float(N) * 2 * pi for n in range(N)]
+      angles += angles[:1]
 
-          mlt.rc('figure', figsize=(8, 8))
-          ax = plt.subplot(111, polar=True)
-          plt.xticks(angles[:-1], categories, color='grey', size=13)
-          ax.set_rlabel_position(0)
-          plt.yticks([.25, .5, .75], [".25", ".5", ".75"], color="grey", size=13)
-          plt.ylim(0, 1)
-          ax.plot(angles, values, linewidth=1, linestyle='solid')
-          ax.fill(angles, values, 'b', alpha=0.1)
-          plt.title(f"'{cat_col} = {label}' with num cols")
-          plt.savefig(os.path.join(self.path, "8_multi_variate", "2_radar_plot", f"{cat_col}/{label}_radar_plot.png"), bbox_inches='tight')
-          plt.clf()
+      mlt.rcParams['figure.figsize'] = figsize
+      ax = plt.subplot((len(df[cat_col].unique())+1)//3, 3, i+1, polar=True)
+      plt.xticks(angles[:-1], categories, color='grey', size=13)
+      ax.set_rlabel_position(0)
+      plt.yticks([.25, .5, .75], [".25", ".5", ".75"], color="grey", size=13)
+      plt.ylim(0, 1)
+      ax.plot(angles, values, linewidth=1, linestyle='solid')
+      ax.fill(angles, values, 'b', alpha=0.1)
+      plt.title(f"'{cat_col} = {label}' with num cols")
+
+    plt.tight_layout()
+    if folder_name:
+      plt.ioff()
+      plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{cat_col}_radar_plot.png"), bbox_inches='tight')
+      plt.close()
+    else:
+      plt.show()
 
   #####################################
   #        Uni-variate Target         #
   #####################################
   def visualize_target(self):
-    self.create_folder(os.path.join('visualizer', '1_target'), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', '1_target'), verbose=False)
 
     if self.problem_type.startswith('clas'):
       self.create_countplot(df=self.df, col_name=self.target_col, folder_name='1_target')
@@ -435,7 +437,7 @@ class Visualizer:
   #      Uni-variate Categorical      #
   #####################################
   def visualize_cat(self):
-    self.create_folder(os.path.join('visualizer', '2_cat_features'), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', '2_cat_features'), verbose=False)
 
     for i, col in enumerate(self.cat_cols):
       print(f'\r{bg("Uni-variate Cat", type="s", color="green")}: finished {bg(i+1, color="yellow")} out of {len(self.cat_cols)}', end='') 
@@ -451,8 +453,8 @@ class Visualizer:
   #      uni-variate numerical        #
   #####################################
   def visualize_num(self):
-    self.create_folder(os.path.join('visualizer', "3_num_features", "3.1_histogram"), verbose=False)
-    self.create_folder(os.path.join('visualizer', "3_num_features", "3.2_kde"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "3_num_features", "3.1_histogram"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "3_num_features", "3.2_kde"), verbose=False)
 
     for i, col in enumerate(self.num_cols):
       print(f'\r{bg("Uni-variate Num", type="s", color="green")}: finished {bg(i+1, color="yellow")} out of {len(self.num_cols)}', end='')
@@ -465,8 +467,8 @@ class Visualizer:
   #    Bi-variate numerical with index   #
   ########################################
   def visualize_num_with_idx(self):
-    self.create_folder(os.path.join('visualizer', "4_index", "1_num_features", "1_line"), verbose=False)
-    self.create_folder(os.path.join('visualizer', "4_index", "1_num_features", "2_points"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "4_index", "1_num_features", "1_line"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "4_index", "1_num_features", "2_points"), verbose=False)
 
     if self.problem_type.startswith('clas'):
       for i, col in enumerate(self.num_cols):
@@ -485,7 +487,7 @@ class Visualizer:
   #    Bi-variate categorical with index #
   ########################################
   def visualize_cat_with_idx(self):
-    self.create_folder(os.path.join('visualizer', "4_index", "2_cat_features"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "4_index", "2_cat_features"), verbose=False)
 
     if self.problem_type.startswith('class'):
       for i, col in enumerate(self.cat_cols):
@@ -502,7 +504,7 @@ class Visualizer:
   #       Bi-variate cat with cat        #
   ########################################
   def visualize_cat_with_cat(self):
-    self.create_folder(os.path.join('visualizer', '5_cat_with_cat'), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', '5_cat_with_cat'), verbose=False)
 
     comb_len = ncr(len(self.cat_cols), 2)
     for i, (cat_1, cat_2) in enumerate(combinations(self.cat_cols, 2)):
@@ -519,7 +521,7 @@ class Visualizer:
   #       Bi-variate num with num        #
   ########################################
   def visualize_num_with_num(self):
-    self.create_folder(os.path.join('visualizer', '6_num_with_num'), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', '6_num_with_num'), verbose=False)
 
     comb_len = ncr(len(self.num_cols), 2)
     if self.problem_type.startswith("class"):
@@ -539,9 +541,9 @@ class Visualizer:
   #       Bi-variate Num with Cat        #
   ########################################
   def visualize_num_with_cat(self):
-    self.create_folder(os.path.join('visualizer', "7_num_with_cat", "1_box_plot"), verbose=False)
-    self.create_folder(os.path.join('visualizer', "7_num_with_cat", "2_violin_plot"), verbose=False)
-    self.create_folder(os.path.join('visualizer', "7_num_with_cat", "3_ridge_plot"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "7_num_with_cat", "1_box_plot"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "7_num_with_cat", "2_violin_plot"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "7_num_with_cat", "3_ridge_plot"), verbose=False)
 
     n_plots, i = len(self.cat_cols) * len(self.num_cols), 1
     for cat_col in self.cat_cols:
@@ -557,11 +559,19 @@ class Visualizer:
   #             Multi-variate            #
   ########################################
   def visualize_multi_variate(self):
-    self.create_folder(os.path.join('visualizer', "8_multi_variate", "1_parallel_plot"), verbose=False)
-    self.create_folder(os.path.join('visualizer', "8_multi_variate", "2_radar_plot"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "8_multi_variate", "1_parallel_plot"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "8_multi_variate", "2_radar_plot"), verbose=False)
 
-    self.create_parallel_plot()
-    self.create_radar_plot()
+    self.create_parallel_plot(df=self.df,
+                              num_cols=self.num_cols,
+                              target_col=self.target_col if self.problem_type.startswith("class") else None,
+                              folder_name=os.path.join("8_multi_variate", "1_parallel_plot"))
+
+    n_cat_cols = len(self.cat_cols)
+    for i, cat_col in enumerate(self.cat_cols):
+      print(f'\r{bg("Multi-variate Nums with Cat", "s", "green")}: finished {bg(i+1, color="yellow")} out of {n_cat_cols}', end='')
+      if len(self.df[cat_col].unique()) <= 30:
+        self.create_radar_plot(df=self.df, num_cols=self.num_cols, cat_col=cat_col, folder_name=os.path.join("8_multi_variate", "2_radar_plot"))
 
 
   # def visualize_cat_with_target(self):
@@ -580,12 +590,3 @@ class Visualizer:
     self.visualize_num_with_num()
     self.visualize_num_with_cat()
     self.visualize_multi_variate()
-
-if __name__ == '__main__':
-    df = pd.read_csv("/media/mosaab/Volume/Personal/Development/Courses Docs/ML GrandMaster/ml_project/input/new_df.csv")
-    path = '/media/mosaab/Volume/Personal/Development/Courses Docs/ML GrandMaster/ml_project'
-    num_cols  = ['LotFrontage', 'LotArea', 'MasVnrArea', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF',
-            '1stFlrSF', '2ndFlrSF', 'LowQualFinSF', 'GrLivArea', 'GarageArea', 'WoodDeckSF', 'OpenPorchSF',
-            'EnclosedPorch', '3SsnPorch', 'ScreenPorch']
-    vis = Visualizer(df=df, target_col='target', problem_type="classification")
-    vis.visualize_all()
