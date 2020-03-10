@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="visualizer",
-    version="0.0.1",
+    version="0.0.2",
     description="Automate the process of visualization",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -26,6 +26,7 @@ setup(
                       "wordcloud",
                       "pandas",
                       "math",
-                      "sklearn"]
+                      "sklearn",
+                      "termcolor"]
     python_requires='>=3.6'
 )
