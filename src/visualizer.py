@@ -34,6 +34,9 @@ class Visualizer:
         if col in self.num_cols: self.num_cols.remove(col)
         if col in self.cat_cols: self.cat_cols.remove(col)
 
+    self.len_cats = len(self.cat_cols)
+    self.len_nums = len(self.num_cols)
+
   ############################ Count Plot (Cat)
   @staticmethod
   def create_countplot(df, col_name, figsize=(8, 6), annot=True, rotate=False, folder_name=None):
@@ -440,7 +443,8 @@ class Visualizer:
     create_folder(folder_name=os.path.join('visualizer', '2_cat_features'), verbose=False)
 
     for i, col in enumerate(self.cat_cols):
-      print(f'\r{bg("Uni-variate Cat", type="s", color="green")}: finished {bg(i+1, color="yellow")} out of {len(self.cat_cols)}', end='') 
+      percent = 100.*(i+1)/self.len_cats
+      print(f'\r{bg("Uni-variate Cat", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='') 
       unique_len = len(self.df[col].unique())
       if unique_len <= 27:
         self.create_countplot(df=self.df, col_name=col, folder_name='2_cat_features')
@@ -457,7 +461,8 @@ class Visualizer:
     create_folder(folder_name=os.path.join('visualizer', "3_num_features", "3.2_kde"), verbose=False)
 
     for i, col in enumerate(self.num_cols):
-      print(f'\r{bg("Uni-variate Num", type="s", color="green")}: finished {bg(i+1, color="yellow")} out of {len(self.num_cols)}', end='')
+      percent = 100.*(i+1)/self.len_nums
+      print(f'\r{bg("Uni-variate Num", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
       # TODO: look for an equation on how to set the bins properly.
       self.create_hist(df=self.df, col_name=col, folder_name=os.path.join("3_num_features", "3.1_histogram"))
       self.create_kde(df=self.df, col_name=col, folder_name=os.path.join("3_num_features", "3.2_kde"))
@@ -470,17 +475,19 @@ class Visualizer:
     create_folder(folder_name=os.path.join('visualizer', "4_index", "1_num_features", "1_line"), verbose=False)
     create_folder(folder_name=os.path.join('visualizer', "4_index", "1_num_features", "2_points"), verbose=False)
 
+
     if self.problem_type.startswith('clas'):
       for i, col in enumerate(self.num_cols):
-        print(f'\r{bg("Bi-variate Num with Index", type="s", color="green")}: finished {bg(i+1, color="yellow")} out of {len(self.num_cols)}', end='')
-        self.create_line_with_index(df=self.df, col_name=col, target_col=self.target_col, folder_name=os.path.join("1_num_features", "1_line"))
-        self.create_point_with_index(df=self.df, col_name=col, target_col=self.target_col, folder_name=os.path.join("1_num_features", "2_points"))
-      print()
-    else:
-      for i, col in enumerate(self.num_cols):
-        print(f'\r{bg("Bi-variate Num with Index", type="s", color="green")}: finished {bg(i+1, color="yellow")} out of {len(self.num_cols)}', end='')
-        self.create_line_with_index(df=self.df, col_name=col, folder_name=os.path.join("1_num_features", "1_line"))
-        self.create_point_with_index(df=self.df, col_name=col, folder_name=os.path.join("1_num_features", "2_points"))
+        percent = 100.*(i+1)/self.len_nums
+        print(f'\r{bg("Bi-variate Num with Index", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+        self.create_line_with_index(df=self.df,
+                                    col_name=col,
+                                    target_col=self.target_col if self.problem_type.startswith("class") else None,
+                                    folder_name=os.path.join("1_num_features", "1_line"))
+        self.create_point_with_index(df=self.df,
+                                     col_name=col,
+                                     target_col=self.target_col if self.problem_type.startswith("class") else None, 
+                                     folder_name=os.path.join("1_num_features", "2_points"))
       print()
 
   ########################################
@@ -489,15 +496,15 @@ class Visualizer:
   def visualize_cat_with_idx(self):
     create_folder(folder_name=os.path.join('visualizer', "4_index", "2_cat_features"), verbose=False)
 
+
     if self.problem_type.startswith('class'):
       for i, col in enumerate(self.cat_cols):
-        print(f'\r{bg("Bi-variate Cat with Index", type="s", color="green")}: finished {bg(i+1, color="yellow")} out of {len(self.cat_cols)}', end='')
-        self.create_point_with_index(df=self.df, col_name=col, target_col=self.target_col, folder_name='2_cat_features')
-      print()
-    else:
-      for i, col in enumerate(self.cat_cols):
-        print(f'\r{bg("Bi-variate Num with Index", type="s", color="green")}: finished {bg(i+1, color="yellow")} out of {len(self.num_cols)}', end='')
-        self.create_point_with_index(df=self.df, col_name=col, target_col=self.target_col, folder_name='2_cat_features')
+        percent = 100.*(i+1)/self.len_cats
+        print(f'\r{bg("Bi-variate Cat with Index", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+        self.create_point_with_index(df=self.df,
+                                     col_name=col, 
+                                     target_col=self.target_col if self.problem_type.startswith("class") else None, 
+                                     folder_name='2_cat_features')
       print()
 
   ########################################
@@ -508,8 +515,9 @@ class Visualizer:
 
     comb_len = ncr(len(self.cat_cols), 2)
     for i, (cat_1, cat_2) in enumerate(combinations(self.cat_cols, 2)):
-      print(f'\r{bg("Bi-variate Cat with Cat", "s", "green")}: finished {bg(i+1, color="yellow")} out of {comb_len}', end='') 
-      if cat_1 == cat_2: continue
+      percent = 100.*(i+1)/comb_len
+      print(f'\r{bg("Bi-variate Cat with Cat", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='') 
+
       uniques_len_1 = len(self.df[cat_1].unique())
       uniques_len_2 = len(self.df[cat_2].unique())
       if uniques_len_1 * uniques_len_2 <= 30:
@@ -526,16 +534,15 @@ class Visualizer:
     comb_len = ncr(len(self.num_cols), 2)
     if self.problem_type.startswith("class"):
       for i, (num_1, num_2) in enumerate(combinations(self.num_cols, 2)):
-        print(f'\r{bg("Bi-variate Num with Num", "s", "green")}: finished {bg(i+1, color="yellow")} out of {comb_len}', end='')
-        self.create_scatter(df=self.df, num_1=num_1, num_2=num_2, target_col=self.target_col, folder_name="6_num_with_num")
+        percent = 100.*(i+1)/comb_len
+        print(f'\r{bg("Bi-variate Num with Num", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+        self.create_scatter(df=self.df,
+                            num_1=num_1,
+                            num_2=num_2, 
+                            target_col=self.target_col if self.problem_type.startswith("class") else None, 
+                            folder_name="6_num_with_num")
         self.create_density(df=self.df, num_1=num_1, num_2=num_2, folder_name="6_num_with_num")
-      print()
-    else:
-      for i, (num_1, num_2) in enumerate(combinations(self.num_cols, 2)):
-        print(f'\r{bg("Bi-variate Num with Num", "s", "green")}: finished {bg(i+1, color="yellow")} out of {comb_len}', end='')
-        self.create_scatter(df=self.df, num_1=num_1, num_2=num_2, folder_name="6_num_with_num")
-        self.create_density(df=self.df, num_1=num_1, num_2=num_2, folder_name="6_num_with_num")
-      print()     
+      print()  
 
   ########################################
   #       Bi-variate Num with Cat        #
@@ -545,11 +552,13 @@ class Visualizer:
     create_folder(folder_name=os.path.join('visualizer', "7_num_with_cat", "2_violin_plot"), verbose=False)
     create_folder(folder_name=os.path.join('visualizer', "7_num_with_cat", "3_ridge_plot"), verbose=False)
 
-    n_plots, i = len(self.cat_cols) * len(self.num_cols), 1
+    n_plots, i = (self.len_cats * self.len_nums), 0
     for cat_col in self.cat_cols:
       for num_col in self.num_cols:
+        percent = 100.*(i+1)/n_plots
+        print(f'\r{bg("Bi-variate Num with Cat", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+
         if len(self.df[cat_col].unique()) <= 27:
-          print(f'\r{bg("Bi-variate Num Vs Cat", "s", "green")}: finished {bg(i, color="yellow")} out of {n_plots}', end='')
           self.create_box_plot(df=self.df, cat_col=cat_col, num_col=num_col, folder_name=os.path.join("7_num_with_cat", "1_box_plot"))
           self.create_violin_plot(df=self.df, cat_col=cat_col, num_col=num_col, folder_name=os.path.join("7_num_with_cat", "2_violin_plot"))
           self.create_ridge_plot(df=self.df, cat_col=cat_col, num_col=num_col, folder_name=os.path.join("7_num_with_cat", "3_ridge_plot"))
@@ -567,9 +576,9 @@ class Visualizer:
                               target_col=self.target_col if self.problem_type.startswith("class") else None,
                               folder_name=os.path.join("8_multi_variate", "1_parallel_plot"))
 
-    n_cat_cols = len(self.cat_cols)
     for i, cat_col in enumerate(self.cat_cols):
-      print(f'\r{bg("Multi-variate Nums with Cat", "s", "green")}: finished {bg(i+1, color="yellow")} out of {n_cat_cols}', end='')
+      percent = 100.*(i+1)/self.len_cats
+      print(f'\r{bg("Multi-variate Nums with Cat", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
       if len(self.df[cat_col].unique()) <= 30:
         self.create_radar_plot(df=self.df, num_cols=self.num_cols, cat_col=cat_col, folder_name=os.path.join("8_multi_variate", "2_radar_plot"))
 
