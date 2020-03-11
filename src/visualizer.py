@@ -2,7 +2,6 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib as mlt
-# mlt.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from wordcloud import WordCloud
@@ -29,94 +28,103 @@ class Visualizer:
     if self.target_col in self.cat_cols: self.cat_cols.remove(self.target_col)
 
     # Remove the ignore columns
-    if (self.num_cols is None or self.cat_cols is None) and self.ignore_cols:
-      for col in ignore_cols:
-        if col in self.num_cols: self.num_cols.remove(col)
-        if col in self.cat_cols: self.cat_cols.remove(col)
+    if isinstance(self.ignore_cols, list):
+      if (self.num_cols is None or self.cat_cols is None) and self.ignore_cols:
+        for col in ignore_cols:
+          if col in self.num_cols: self.num_cols.remove(col)
+          if col in self.cat_cols: self.cat_cols.remove(col)
+    else:
+      raise TypeError("'ignore_cols' must be list.")
 
     self.len_cats = len(self.cat_cols)
     self.len_nums = len(self.num_cols)
 
   ############################ Count Plot (Cat)
   @staticmethod
-  def create_countplot(df, col_name, figsize=(8, 6), annot=True, rotate=False, folder_name=None):
-    len_unique = len(df[col_name].unique())
+  def create_count_plot(df, cat_col, figsize=(8, 6), annot=True, rotate=False, folder_name=None):
+    len_unique = len(df[cat_col].unique())
     fig = plt.figure(figsize=figsize)
-    counts = df[col_name].value_counts().index
+    counts = df[cat_col].value_counts().index
     if len_unique >= 12:
       color  = sns.color_palette()[0]
-      ax = sns.countplot(df[col_name], edgecolor='k', zorder=3, order=counts, color=color)
+      ax = sns.countplot(df[cat_col], edgecolor='k', zorder=3, order=counts, color=color)
     else:
-      ax = sns.countplot(df[col_name], edgecolor='k', zorder=3, order=counts)
-    plt.title('Distribution of "'+col_name+'" column', y=1.05, size=16)
+      ax = sns.countplot(df[cat_col], edgecolor='k', zorder=3, order=counts)
+    plt.title('Distribution of "'+cat_col+'" column', y=1.05, size=16)
     if annot: show_annotation(ax, 10, 12, df.shape[0])
     if rotate: plt.xticks(rotation=90)
     plt.grid(zorder=0)
     if folder_name: 
       plt.ioff()
-      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{col_name}_count.png"), bbox_inches='tight')
+      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{cat_col}_count.png"), bbox_inches='tight')
       plt.close(fig)
     else:
       plt.show()
 
   ############################### Pie Plot (Cat)
   @staticmethod
-  def create_pieplot(df, col_name, figsize=(8, 6), folder_name=None):
+  def create_pie_plot(df, cat_col, figsize=(8, 6), folder_name=None):
     fig = plt.figure(figsize=figsize)
-    sorted_counts = df[col_name].value_counts()
+    sorted_counts = df[cat_col].value_counts()
     patches, texts = plt.pie(sorted_counts, labels=sorted_counts.index, startangle=90,
-    counterclock=False, shadow=True, explode=(0.04, 0), autopct='%1.1f%%')[0:2]
+                             counterclock=False, shadow=True, explode=[0.02]+[0]*(len(df[cat_col].unique())-1), autopct='%1.1f%%')[0:2]
     fig.tight_layout()
-    plt.title('Distribution of "'+col_name+'" column', y=1.05, size=16)
+    plt.title('Distribution of "'+cat_col+'" column', y=1.05, size=16)
     plt.axis('equal')
+
     if folder_name:
       plt.ioff()
-      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{col_name}_pie.png"), bbox_inches='tight')
+      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{cat_col}_pie.png"), bbox_inches='tight')
       plt.close(fig)
     else:
       plt.show()
 
   ############################### Historgram (Num)
   @staticmethod
-  def create_hist(df, col_name, figsize=(8, 6), folder_name=None):
+  def create_hist_plot(df, num_col, figsize=(8, 6), folder_name=None):
     fig = plt.figure(figsize=figsize)
-    step = float(.05*(df[col_name].max()-df[col_name].min()))
+    step = float(.05*(df[num_col].max()-df[num_col].min()))
     if step < 1:
-      bins = range(df[col_name].min(), df[col_name].max(), int((df[col_name].max()-df[col_name].min())))
-      plt.hist(x=df[col_name], bins=bins, edgecolor='k', zorder=3)
+      bins = range(df[num_col].min(), df[num_col].max(), int((df[num_col].max()-df[num_col].min())))
+      plt.hist(x=df[num_col], bins=bins, edgecolor='k', zorder=3)
       plt.xticks(bins)
     else:
-      plt.hist(x=df[col_name], edgecolor='k', zorder=3)
+      plt.hist(x=df[num_col], edgecolor='k', zorder=3)
     plt.grid(zorder=0)
-    plt.title(f'Histogram of "{col_name}"', y=1.05, size=16)
-    plt.xlabel(f"{col_name}")
+    plt.title(f'Histogram of "{num_col}"', y=1.05, size=16)
+    plt.xlabel(f"{num_col}")
     plt.ylabel("count")
     if folder_name:
       plt.ioff()
-      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{col_name}_histogram.png"), bbox_inches='tight')
+      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{num_col}_histogram.png"), bbox_inches='tight')
       plt.close(fig)
     else:
       plt.show()
 
   ############################### KDE (Num)
   @staticmethod
-  def create_kde(df, col_name, figsize=(8, 6), folder_name=None):
+  def create_kde_plot(df, num_col, target_col=None, figsize=(8, 6), folder_name=None):
     fig = plt.figure(figsize=figsize)
-    sns.kdeplot(df[col_name], shade=True)
+    if target_col:
+      for label in df[target_col].unique():
+        sns.kdeplot(df[df[target_col] == label][num_col], shade=True, label=label)
+      plt.legend()
+    else:
+      sns.kdeplot(df[num_col], shade=True)
     plt.grid()
-    plt.title(f'KDE for "{col_name}"', y=1.05, size=16)
+    plt.title(f'KDE for "{num_col}"', y=1.05, size=16)
     if folder_name:
       plt.ioff()
-      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{col_name}_kde.png"), bbox_inches='tight')
+      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{num_col}_kde.png"), bbox_inches='tight')
       plt.close(fig)
     else:
       plt.show()
 
   ############################### Word Cloud (Cat)
   @staticmethod
-  def create_wordcloud(df, col_name, figsize=(15, 12), folder_name=None):
+  def create_wordcloud(df, cat_col, figsize=(15, 12), folder_name=None):
     # Lets first convert the 'result' dictionary to 'list of tuples'
-    tup = dict(df[col_name].value_counts())
+    tup = dict(df[cat_col].value_counts())
     #Initializing WordCloud using frequencies of tags.
     wordcloud = WordCloud(background_color='black',
                           width=1000,
@@ -128,18 +136,18 @@ class Visualizer:
     plt.imshow(wordcloud)
     plt.axis('off')
     plt.tight_layout(pad=0)
-    plt.title(f'WordCloud for {col_name}', y=1.05, size=20)
+    plt.title(f'WordCloud for {cat_col}', y=1.05, size=20)
     if folder_name:
       plt.ioff()
-      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{col_name}_wordcloud.png"), bbox_inches='tight')
+      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{cat_col}_wordcloud.png"), bbox_inches='tight')
       plt.close(fig)
     else:
       plt.show()
 
   ############################### Histogram Plot for high cardinality (Cat)
   @staticmethod
-  def create_hist_for_high_cardinality(df, col_name, figsize=(16, 6), annot=True, folder_name=None):
-    counts = df[col_name].value_counts().values
+  def create_hist_for_high_cardinality(df, cat_col, figsize=(16, 6), annot=True, folder_name=None):
+    counts = df[cat_col].value_counts().values
     step = int(.05*(counts.max()-counts.min()))
     fig = plt.figure(figsize=figsize)
     if step < 1:
@@ -149,7 +157,7 @@ class Visualizer:
       ax = plt.hist(x=counts, bins=bins, edgecolor='k', zorder=3)
       plt.xticks(bins)
     plt.grid(zorder=0)
-    plt.title(f"Range of Occurances for labels in '{col_name}'", y=1.05, size=20)
+    plt.title(f"Range of Occurances for labels in '{cat_col}'", y=1.05, size=20)
     plt.ylabel("Counts of Labels")
     plt.xlabel("Range of Occurances")
 
@@ -165,55 +173,55 @@ class Visualizer:
       plt.ylim(0, max(sizes) * 1.15)  # set y limit based on highest heights
     if folder_name:
       plt.ioff()
-      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{col_name}_hist_highCardinality.png"), bbox_inches='tight')
+      plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{cat_col}_hist_highCardinality.png"), bbox_inches='tight')
       plt.close(fig)
     else:
       plt.show()
 
 ############################### line with index (Num)
   @staticmethod
-  def create_line_with_index(df, col_name, target_col=None, figsize=(25, 6), folder_name=None):
+  def create_line_with_index(df, num_col, target_col=None, figsize=(25, 6), folder_name=None):
     fig = plt.figure(figsize=figsize)
     if target_col:
       ax  = fig.add_axes([0, 0, 1, 1])
       uniques = df[target_col].unique()
       colors = sns.color_palette(n_colors=len(uniques))
       for i, label in enumerate(uniques):
-        ax.plot(df[df[target_col] == label][col_name], lw=1, c=colors[i], label=label)
+        ax.plot(df[df[target_col] == label][num_col], lw=1, c=colors[i], label=label)
       plt.legend()
     else:
-      df[col_name].plot.line(figsize=figsize, lw=1)
+      df[num_col].plot.line(figsize=figsize, lw=1)
     plt.grid()
-    plt.title(f"Distribution of '{col_name}' along the index", y=1.05, size=16)
-    plt.ylabel(f'{col_name} values')
+    plt.title(f"Distribution of '{num_col}' along the index", y=1.05, size=16)
+    plt.ylabel(f'{num_col} values')
     plt.xlabel("Row Index")
     if folder_name:
       plt.ioff()
-      plt.savefig(os.path.join(os.getcwd(), 'visualizer', "4_index", folder_name, f"{col_name}_line.png"), bbox_inches='tight')
+      plt.savefig(os.path.join(os.getcwd(), 'visualizer', "4_index", folder_name, f"{num_col}_line.png"), bbox_inches='tight')
       plt.close(fig)
     else:
       plt.show()
 
 ############################### point with index (Num)
   @staticmethod
-  def create_point_with_index(df, col_name, target_col=None, figsize=(28, 6), folder_name=None):
+  def create_point_with_index(df, num_col, target_col=None, figsize=(28, 6), folder_name=None):
     fig = plt.figure(figsize=figsize)
     if target_col:
         uniques = df[target_col].unique()
         colors = sns.color_palette(n_colors=len(uniques))
         for i, label in enumerate(uniques):
-            plt.plot(df[df[target_col] == label][col_name], '.', c=colors[i], label=label)
+            plt.plot(df[df[target_col] == label][num_col], '.', c=colors[i], label=label)
         plt.legend()
     else:
-        plt.plot(df[col_name], '.')
+        plt.plot(df[num_col], '.')
       
     plt.grid()
-    plt.title(f"Distribution of '{col_name}' along the index", y=1.05, size=16)
+    plt.title(f"Distribution of '{num_col}' along the index", y=1.05, size=16)
     plt.xlabel('Row Index')
-    plt.ylabel(f'{col_name} Values')
+    plt.ylabel(f'{num_col} Values')
     if folder_name:
       plt.ioff()
-      plt.savefig(os.path.join(os.getcwd(), "visualizer", "4_index", folder_name, f"{col_name}_points.png"), bbox_inches='tight')
+      plt.savefig(os.path.join(os.getcwd(), "visualizer", "4_index", folder_name, f"{num_col}_points.png"), bbox_inches='tight')
       plt.close(fig)
     else:
       plt.show()
@@ -273,7 +281,7 @@ class Visualizer:
 
   ################################ Scatter Plot (Num - Num)
   @staticmethod
-  def create_scatter(df, num_1, num_2, target_col=None, figsize=(12, 6), folder_name=None):
+  def create_scatter_plot(df, num_1, num_2, target_col=None, figsize=(12, 6), folder_name=None):
     fig = plt.figure(figsize=figsize)
     if target_col:
       sns.scatterplot(x=num_1, y=num_2, data=df, zorder=3, hue=target_col)
@@ -292,10 +300,9 @@ class Visualizer:
 
 ################################ Density Plot (Num - Num)
   @staticmethod
-  def create_density(df, num_1, num_2, figsize=(8, 6), folder_name=None):
+  def create_density_plot(df, num_1, num_2, figsize=(8, 6), folder_name=None):
     mlt.rcParams['figure.figsize'] = figsize
     g = sns.jointplot(x=df[num_1], y=df[num_2], kind='kde', cmap="Blues", shade=True, shade_lowest=True)
-    # sns.plt.title(f"Density Plot of '{num_1}' and '{num_2}'", y=3, size=16)
     g.fig.subplots_adjust(top=0.9)
     g.fig.suptitle(f"Density Plot of '{num_1}' and '{num_2}'", fontsize=16)
     if folder_name:
@@ -430,11 +437,11 @@ class Visualizer:
     create_folder(folder_name=os.path.join('visualizer', '1_target'), verbose=False)
 
     if self.problem_type.startswith('clas'):
-      self.create_countplot(df=self.df, col_name=self.target_col, folder_name='1_target')
-      self.create_pieplot(df=self.df, col_name=self.target_col, folder_name='1_target')
+      self.create_count_plot(df=self.df, cat_col=self.target_col, folder_name='1_target')
+      self.create_pie_plot(df=self.df, cat_col=self.target_col, folder_name='1_target')
     else:
-      self.create_hist(df=self.df, col_name=self.target_col, folder_name='1_target')
-      self.create_kde(df=self.df, col_name=self.target_col, folder_name='1_target')
+      self.create_hist_plot(df=self.df, num_col=self.target_col, folder_name='1_target')
+      self.create_kde_plot(df=self.df, num_col=self.target_col, folder_name='1_target')
 
   #####################################
   #      Uni-variate Categorical      #
@@ -447,10 +454,10 @@ class Visualizer:
       print(f'\r{bg("Uni-variate Cat", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='') 
       unique_len = len(self.df[col].unique())
       if unique_len <= 27:
-        self.create_countplot(df=self.df, col_name=col, folder_name='2_cat_features')
+        self.create_count_plot(df=self.df, cat_col=col, folder_name='2_cat_features')
       else:
-        self.create_wordcloud(df=self.df, col_name=col, folder_name='2_cat_features')
-        self.create_hist_for_high_cardinality(df=self.df, col_name=col, folder_name='2_cat_features')
+        self.create_wordcloud(df=self.df, cat_col=col, folder_name='2_cat_features')
+        self.create_hist_for_high_cardinality(df=self.df, cat_col=col, folder_name='2_cat_features')
     print()
 
   #####################################
@@ -464,8 +471,8 @@ class Visualizer:
       percent = 100.*(i+1)/self.len_nums
       print(f'\r{bg("Uni-variate Num", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
       # TODO: look for an equation on how to set the bins properly.
-      self.create_hist(df=self.df, col_name=col, folder_name=os.path.join("3_num_features", "3.1_histogram"))
-      self.create_kde(df=self.df, col_name=col, folder_name=os.path.join("3_num_features", "3.2_kde"))
+      self.create_hist_plot(df=self.df, num_col=col, folder_name=os.path.join("3_num_features", "3.1_histogram"))
+      self.create_kde_plot(df=self.df, num_col=col, folder_name=os.path.join("3_num_features", "3.2_kde"))
     print()
 
   ########################################
@@ -475,20 +482,18 @@ class Visualizer:
     create_folder(folder_name=os.path.join('visualizer', "4_index", "1_num_features", "1_line"), verbose=False)
     create_folder(folder_name=os.path.join('visualizer', "4_index", "1_num_features", "2_points"), verbose=False)
 
-
-    if self.problem_type.startswith('clas'):
-      for i, col in enumerate(self.num_cols):
-        percent = 100.*(i+1)/self.len_nums
-        print(f'\r{bg("Bi-variate Num with Index", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
-        self.create_line_with_index(df=self.df,
-                                    col_name=col,
-                                    target_col=self.target_col if self.problem_type.startswith("class") else None,
-                                    folder_name=os.path.join("1_num_features", "1_line"))
-        self.create_point_with_index(df=self.df,
-                                     col_name=col,
-                                     target_col=self.target_col if self.problem_type.startswith("class") else None, 
-                                     folder_name=os.path.join("1_num_features", "2_points"))
-      print()
+    for i, col in enumerate(self.num_cols):
+      percent = 100.*(i+1)/self.len_nums
+      print(f'\r{bg("Bi-variate Num with Index", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+      self.create_line_with_index(df=self.df,
+                                  num_col=col,
+                                  target_col=self.target_col if self.problem_type.startswith("class") else None,
+                                  folder_name=os.path.join("1_num_features", "1_line"))
+      self.create_point_with_index(df=self.df,
+                                   num_col=col,
+                                   target_col=self.target_col if self.problem_type.startswith("class") else None, 
+                                   folder_name=os.path.join("1_num_features", "2_points"))
+    print()
 
   ########################################
   #    Bi-variate categorical with index #
@@ -496,16 +501,14 @@ class Visualizer:
   def visualize_cat_with_idx(self):
     create_folder(folder_name=os.path.join('visualizer', "4_index", "2_cat_features"), verbose=False)
 
-
-    if self.problem_type.startswith('class'):
-      for i, col in enumerate(self.cat_cols):
-        percent = 100.*(i+1)/self.len_cats
-        print(f'\r{bg("Bi-variate Cat with Index", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
-        self.create_point_with_index(df=self.df,
-                                     col_name=col, 
-                                     target_col=self.target_col if self.problem_type.startswith("class") else None, 
-                                     folder_name='2_cat_features')
-      print()
+    for i, col in enumerate(self.cat_cols):
+      percent = 100.*(i+1)/self.len_cats
+      print(f'\r{bg("Bi-variate Cat with Index", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+      self.create_point_with_index(df=self.df,
+                                   num_col=col, 
+                                   target_col=self.target_col if self.problem_type.startswith("class") else None, 
+                                   folder_name='2_cat_features')
+    print()
 
   ########################################
   #       Bi-variate cat with cat        #
@@ -532,17 +535,16 @@ class Visualizer:
     create_folder(folder_name=os.path.join('visualizer', '6_num_with_num'), verbose=False)
 
     comb_len = ncr(len(self.num_cols), 2)
-    if self.problem_type.startswith("class"):
-      for i, (num_1, num_2) in enumerate(combinations(self.num_cols, 2)):
-        percent = 100.*(i+1)/comb_len
-        print(f'\r{bg("Bi-variate Num with Num", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
-        self.create_scatter(df=self.df,
-                            num_1=num_1,
-                            num_2=num_2, 
-                            target_col=self.target_col if self.problem_type.startswith("class") else None, 
-                            folder_name="6_num_with_num")
-        self.create_density(df=self.df, num_1=num_1, num_2=num_2, folder_name="6_num_with_num")
-      print()  
+    for i, (num_1, num_2) in enumerate(combinations(self.num_cols, 2)):
+      percent = 100.*(i+1)/comb_len
+      print(f'\r{bg("Bi-variate Num with Num", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+      self.create_scatter_plot(df=self.df,
+                          num_1=num_1,
+                          num_2=num_2, 
+                          target_col=self.target_col if self.problem_type.startswith("class") else None, 
+                          folder_name="6_num_with_num")
+      self.create_density_plot(df=self.df, num_1=num_1, num_2=num_2, folder_name="6_num_with_num")
+    print()  
 
   ########################################
   #       Bi-variate Num with Cat        #
@@ -563,31 +565,98 @@ class Visualizer:
           self.create_violin_plot(df=self.df, cat_col=cat_col, num_col=num_col, folder_name=os.path.join("7_num_with_cat", "2_violin_plot"))
           self.create_ridge_plot(df=self.df, cat_col=cat_col, num_col=num_col, folder_name=os.path.join("7_num_with_cat", "3_ridge_plot"))
         i += 1
+    print()
+
+  ########################################
+  #       Bi-variate cat with target     #
+  ########################################
+  def visualize_cat_with_target(self):
+      create_folder(folder_name=os.path.join('visualizer', '8_cat_with_target'), verbose=False)
+
+      # If the problem type is classification, then it's cat with cat.
+      # else it's cats with num
+      if self.problem_type.startswith('class'):
+        for i, cat_col in enumerate(self.cat_cols):
+          percent = 100.*(i+1)/self.len_cats
+          print(f'\r{bg("Bi-variate Cat with Target", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='') 
+
+          uniques_len_1 = len(self.df[self.target_col].unique())
+          uniques_len_2 = len(self.df[cat_col].unique())
+          if uniques_len_1 * uniques_len_2 <= 30:
+            self.create_clustered_bar_plot(df=self.df, cat_1=cat_col, cat_2=self.target_col, folder_name="8_cat_with_target")
+            self.create_bubble_plot(df=self.df, cat_1=cat_col, cat_2=self.target_col, folder_name="8_cat_with_target")
+        print()
+
+      else:
+        create_folder(folder_name=os.path.join('visualizer', "8_cat_with_target", "1_box_plot"), verbose=False)
+        create_folder(folder_name=os.path.join('visualizer', "8_cat_with_target", "2_violin_plot"), verbose=False)
+        create_folder(folder_name=os.path.join('visualizer', "8_cat_with_target", "3_ridge_plot"), verbose=False)
+
+        i =  0
+        for cat_col in self.cat_cols:
+          percent = 100.*(i+1)/self.len_cats
+          print(f'\r{bg("Bi-variate Cat with Target", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+
+          if len(self.df[cat_col].unique()) <= 27:
+            self.create_box_plot(df=self.df, cat_col=cat_col, num_col=self.target_col, folder_name=os.path.join("8_cat_with_target", "1_box_plot"))
+            self.create_violin_plot(df=self.df, cat_col=cat_col, num_col=self.target_col, folder_name=os.path.join("8_cat_with_target", "2_violin_plot"))
+            self.create_ridge_plot(df=self.df, cat_col=cat_col, num_col=self.target_col, folder_name=os.path.join("8_cat_with_target", "3_ridge_plot"))
+          i += 1
+        print()
+
+
+  ########################################
+  #       Bi-variate num with target     #
+  ########################################
+  def visualize_num_with_target(self):
+    create_folder(folder_name=os.path.join('visualizer', '9_num_with_target'), verbose=False)
+
+    if self.problem_type.startswith('class'):
+      create_folder(folder_name=os.path.join('visualizer', "9_num_with_target", "1_box_plot"), verbose=False)
+      create_folder(folder_name=os.path.join('visualizer', "9_num_with_target", "2_violin_plot"), verbose=False)
+      create_folder(folder_name=os.path.join('visualizer', "9_num_with_target", "3_kde_plot"), verbose=False)
+
+      for i, num_col in enumerate(self.num_cols):
+        percent = 100.*(i+1)/self.len_nums
+        print(f'\r{bg("Bi-variate Num with Target", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+        self.create_box_plot(df=self.df, cat_col=self.target_col, num_col=num_col, folder_name=os.path.join("9_num_with_target", "1_box_plot"))
+        self.create_violin_plot(df=self.df, cat_col=self.target_col, num_col=num_col, folder_name=os.path.join("9_num_with_target", "2_violin_plot"))
+        self.create_kde_plot(df=self.df, num_col=num_col, target_col=self.target_col, folder_name=os.path.join("9_num_with_target", "3_kde_plot"))
+
+    else:
+      for i, num_col in enumerate(self.num_cols):
+        percent = 100.*(i+1)/self.len_nums
+        print(f'\r{bg("Bi-variate Num with Target", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
+        self.create_scatter_plot(df=self.df,
+                            num_1=num_col,
+                            num_2=self.target_col, 
+                            folder_name="9_num_with_target")
+        self.create_density_plot(df=self.df, num_1=num_col, num_2=self.target_col, folder_name="9_num_with_target")
+      print() 
+
+
 
   ########################################
   #             Multi-variate            #
   ########################################
   def visualize_multi_variate(self):
-    create_folder(folder_name=os.path.join('visualizer', "8_multi_variate", "1_parallel_plot"), verbose=False)
-    create_folder(folder_name=os.path.join('visualizer', "8_multi_variate", "2_radar_plot"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "10_multi_variate", "1_parallel_plot"), verbose=False)
+    create_folder(folder_name=os.path.join('visualizer', "10_multi_variate", "2_radar_plot"), verbose=False)
 
+    num_cols_with_target = self.num_cols + [self.target_col] if self.problem_type.startswith('reg') else self.num_cols
     self.create_parallel_plot(df=self.df,
-                              num_cols=self.num_cols,
+                              num_cols=num_cols_with_target,
                               target_col=self.target_col if self.problem_type.startswith("class") else None,
-                              folder_name=os.path.join("8_multi_variate", "1_parallel_plot"))
+                              folder_name=os.path.join("10_multi_variate", "1_parallel_plot"))
 
     for i, cat_col in enumerate(self.cat_cols):
       percent = 100.*(i+1)/self.len_cats
       print(f'\r{bg("Multi-variate Nums with Cat", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
       if len(self.df[cat_col].unique()) <= 30:
-        self.create_radar_plot(df=self.df, num_cols=self.num_cols, cat_col=cat_col, folder_name=os.path.join("8_multi_variate", "2_radar_plot"))
+        self.create_radar_plot(df=self.df, num_cols=num_cols_with_target, cat_col=cat_col, folder_name=os.path.join("10_multi_variate", "2_radar_plot"))
 
 
-  # def visualize_cat_with_target(self):
-  #     pass
 
-  # def visualize_num_with_target(self):
-  #     pass
 
   def visualize_all(self):
     self.visualize_target()
@@ -598,4 +667,6 @@ class Visualizer:
     self.visualize_cat_with_cat()
     self.visualize_num_with_num()
     self.visualize_num_with_cat()
+    self.visualize_cat_with_target()
+    self.visualize_num_with_target()
     self.visualize_multi_variate()
