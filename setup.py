@@ -21,12 +21,11 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent"
     ],
-    install_requires=["matplotlib",
-                      "seaborn",
-                      "wordcloud",
-                      "pandas",
-                      "math",
-                      "sklearn",
-                      "termcolor"]
+    install_requires=["matplotlib>=3.1.2",
+                      "seaborn>=0.9.0",
+                      "wordcloud>=1.6.0",
+                      "pandas>=0.25.3",
+                      "sklearn>=0.21.3",
+                      "termcolor>=1.1.0"],
     python_requires='>=3.6'
 )
