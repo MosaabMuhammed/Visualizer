@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="visualizer",
-    version="0.0.2",
+    version="0.0.7",
     description="Automate the process of visualization",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -16,6 +16,7 @@ setup(
     py_modules=["visualizer"],
     package_dir={'': 'src'},
     packages=find_packages(),
+    include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -25,7 +26,7 @@ setup(
                       "seaborn>=0.9.0",
                       "wordcloud>=1.6.0",
                       "pandas>=0.25.3",
-                      "sklearn>=0.21.3",
+                      "scikit-learn>=0.21.3",
                       "termcolor>=1.1.0"],
     python_requires='>=3.6'
 )
