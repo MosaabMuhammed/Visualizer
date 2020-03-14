@@ -50,10 +50,12 @@ pip install -U visualizer
 from visualizer import Visualize
 
 # Create a count plot
-Visualizer.create_count_plot(df=df, cat_col="cat_col")
+Visualizer.create_count_plot(df=df, cat_col="bin_3", annot=True)
 ```
 
-![image-20200314105912548](/home/mosaab/.config/Typora/typora-user-images/image-20200314105912548.png)
+![count_plot](./imgs/count_plot.png)
+
+To see more types of individual plotting, you can see the [docs](https://mosaabmuhammed.github.io/visualizer/testing/Docs.html).
 
 1. To use the second type **Automatic Visualization**, all the methods starts with **visualize_**, and you can them as follows:
 ```python
@@ -73,11 +75,17 @@ autoVis = Visualizer(df=df,                    # df: (dataframe)
 # into the current directory.
 autoVis.visualize_all()
 ```
-After running this command, your current directory will have a new folder called "visualizer", which contains all the relationships between the columns.
+
+
+After running this command, the output in your notebook will tell you the progress, and when it's finished, it will be like this:
+
+![progress](./imgs/progress.png)
+
+And your current directory will have a new folder called "visualizer", which contains all the relationships between the columns.
 
 So you can go to each particular relationship "folder", and see the related figures, does it contain any pattern?
 
-![image-20200314105541089](/home/mosaab/.config/Typora/typora-user-images/image-20200314105541089.png)
+![image-20200314105541089](./imgs/folder_structure.png)
 
 To know more, you can see the [docs](https://mosaabmuhammed.github.io/visualizer/testing/Docs.html).
 
