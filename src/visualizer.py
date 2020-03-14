@@ -58,7 +58,9 @@ def create_folder(folder_name, verbose=True):
     else:    
         if verbose: print("Directory " , folder_name ,  " already exists")
 
-
+#####################################
+#            Visualizer             #
+#####################################
 class Visualizer:
     def __init__(self, df, target_col, num_cols=None, cat_cols=None, ignore_cols=None, problem_type='classification'):
         self.df           = df

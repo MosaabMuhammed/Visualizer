@@ -53,7 +53,9 @@ from visualizer import Visualize
 Visualizer.create_count_plot(df=df, cat_col="cat_col")
 ```
 
-2. To use the second type **Automatic Visualization**, all the methods starts with **visualize_**, and you can them as follows:
+![image-20200314105912548](/home/mosaab/.config/Typora/typora-user-images/image-20200314105912548.png)
+
+1. To use the second type **Automatic Visualization**, all the methods starts with **visualize_**, and you can them as follows:
 ```python
 # Import the library
 from visualizer import Visualizer
@@ -71,6 +73,12 @@ autoVis = Visualizer(df=df,                    # df: (dataframe)
 # into the current directory.
 autoVis.visualize_all()
 ```
+After running this command, your current directory will have a new folder called "visualizer", which contains all the relationships between the columns.
+
+So you can go to each particular relationship "folder", and see the related figures, does it contain any pattern?
+
+![image-20200314105541089](/home/mosaab/.config/Typora/typora-user-images/image-20200314105541089.png)
+
 To know more, you can see the [docs](https://mosaabmuhammed.github.io/visualizer/testing/Docs.html).
 
 
