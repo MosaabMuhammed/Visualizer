@@ -8,6 +8,7 @@ from itertools import combinations
 from pandas.plotting import parallel_coordinates
 from sklearn.preprocessing import MinMaxScaler
 import operator as op
+from termcolor import colored
 from functools import reduce
 from warnings import filterwarnings
 filterwarnings('ignore')
@@ -69,14 +70,16 @@ class Visualizer:
         self.cat_cols     = cat_cols if cat_cols != None else list(df.select_dtypes('O').columns)
         self.ignore_cols  = ignore_cols
         self.problem_type = problem_type
-        self.version      = "0.0.7"
+        self.version      = "0.0.8"
 
         # Remove target_col from the numerical or categorical columns.
         if self.target_col in self.num_cols: self.num_cols.remove(self.target_col)
         if self.target_col in self.cat_cols: self.cat_cols.remove(self.target_col)
 
         # Remove the ignore columns
-        if isinstance(self.ignore_cols, list):
+        if self.ignore_cols == None:
+            continue
+        elif isinstance(self.ignore_cols, list):
             if (self.num_cols is None or self.cat_cols is None) and self.ignore_cols:
                 for col in ignore_cols:
                     if col in self.num_cols: self.num_cols.remove(col)
