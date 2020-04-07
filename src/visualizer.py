@@ -15,7 +15,7 @@ filterwarnings('ignore')
 from math import pi
 
 
-#####################################
+#                                   #
 #       Color the background        #
 #####################################
 def bg(value, type='num', color='blue'):
@@ -23,7 +23,7 @@ def bg(value, type='num', color='blue'):
     return colored(' ' + value + ' ', color, attrs=['reverse', 'blink'])
 
 
-#####################################
+#                                   #
 #          Show Annotations         #
 #####################################
 def show_annotation(dist, n=5, size=14, total=None):
@@ -38,8 +38,7 @@ def show_annotation(dist, n=5, size=14, total=None):
                   ha='center', fontsize=size)
     dist.set_ylim(0, max(sizes) * 1.15)  # set y limit based on highest heights
 
-
-#####################################
+#                                   #
 #          Show Annotations         #
 #####################################
 def ncr(n, r):
@@ -48,7 +47,7 @@ def ncr(n, r):
     denom = reduce(op.mul, range(1, r+1), 1)
     return numer // denom
 
-#####################################
+#                                   #
 #            Create Folder          #
 #####################################
 def create_folder(folder_name, verbose=True):
@@ -63,36 +62,45 @@ def create_folder(folder_name, verbose=True):
 #            Visualizer             #
 #####################################
 class Visualizer:
-    def __init__(self, df, target_col, num_cols=None, cat_cols=None, ignore_cols=None, problem_type='classification'):
+    __version__ = "0.0.11"
+    DIR_PATHS = {"root":               "visualizer",
+                 "1_uni_target":       "1_target",
+                 "2_uni_cat":          "2_cat",
+                 "3_uni_num":          "3_num",
+                 "4_cat_with_idx":     "4_cat_with_idx",
+                 "5_num_with_idx":     "5_num_with_idx",
+                 "6_cat_with_cat":     "6_cat_with_cat",
+                 "7_num_with_num":     "7_num_with_num",
+                 "8_num_with_cat":     "8_num_with_cat",
+                 "9_cat_with_target":  "9_cat_with_target",
+                 "10_num_with_target": "10_num_with_target",
+                 "11_multi_variate": "11_multi_variate"}
+
+    def __init__(self, df, target_col=None, num_cols=None, cat_cols=None, ignore_cols=[], problem_type="classification"):
         self.df           = df
         self.target_col   = target_col
         self.num_cols     = num_cols if num_cols != None else list(df.select_dtypes("number").columns)
         self.cat_cols     = cat_cols if cat_cols != None else list(df.select_dtypes('O').columns)
         self.ignore_cols  = ignore_cols
         self.problem_type = problem_type
-        self.version      = "0.0.8"
 
         # Remove target_col from the numerical or categorical columns.
         if self.target_col in self.num_cols: self.num_cols.remove(self.target_col)
         if self.target_col in self.cat_cols: self.cat_cols.remove(self.target_col)
 
         # Remove the ignore columns
-        if self.ignore_cols == None:
-            continue
-        elif isinstance(self.ignore_cols, list):
-            if (self.num_cols is None or self.cat_cols is None) and self.ignore_cols:
+        if isinstance(self.ignore_cols, list):
+            if (self.num_cols is None or self.cat_cols is None):
                 for col in ignore_cols:
                     if col in self.num_cols: self.num_cols.remove(col)
                     if col in self.cat_cols: self.cat_cols.remove(col)
         else:
             raise TypeError("'ignore_cols' must be list.")
 
+        # Get the lengths of all columns
         self.len_cats = len(self.cat_cols)
         self.len_nums = len(self.num_cols)
 
-    @property
-    def __version__(self):
-        return self.version
 
     ############################ Count Plot (Cat)
     @staticmethod
@@ -112,7 +120,7 @@ class Visualizer:
 
         if folder_name: 
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{cat_col}_count.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_col}_count.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -130,7 +138,7 @@ class Visualizer:
 
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{cat_col}_pie.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_col}_pie.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -152,7 +160,7 @@ class Visualizer:
         plt.ylabel("count")
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{num_col}_histogram.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{num_col}_histogram.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -171,7 +179,7 @@ class Visualizer:
         plt.title(f'KDE for "{num_col}"', y=1.05, size=16)
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{num_col}_kde.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{num_col}_kde.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -195,7 +203,7 @@ class Visualizer:
         plt.title(f'WordCloud for {cat_col}', y=1.05, size=20)
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{cat_col}_wordcloud.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_col}_wordcloud.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -229,7 +237,7 @@ class Visualizer:
             plt.ylim(0, max(sizes) * 1.15)  # set y limit based on highest heights
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), 'visualizer', folder_name, f"{cat_col}_hist_highCardinality.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_col}_hist_highCardinality.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -253,7 +261,7 @@ class Visualizer:
         plt.xlabel("Row Index")
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), 'visualizer', "4_index", folder_name, f"{num_col}_line.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{num_col}_line.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -277,7 +285,7 @@ class Visualizer:
         plt.ylabel(f'{num_col} Values')
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), "visualizer", "4_index", folder_name, f"{num_col}_points.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{num_col}_points.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -293,7 +301,7 @@ class Visualizer:
             show_annotation(ax, 2, 12, df.shape[0])
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{cat_1} VS {cat_2}_clustered_bar.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_1} VS {cat_2}_clustered_bar.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -329,7 +337,7 @@ class Visualizer:
                   fontsize=14, loc=(1.10, .05))
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{cat_1} VS {cat_2}_bubble.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_1} VS {cat_2}_bubble.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -349,7 +357,7 @@ class Visualizer:
 
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{num_1} VS {num_2}_scatter.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{num_1} VS {num_2}_scatter.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -363,7 +371,7 @@ class Visualizer:
         g.fig.suptitle(f"Density Plot of '{num_1}' and '{num_2}'", fontsize=16)
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{num_1} VS {num_2}_density.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{num_1} VS {num_2}_density.png"), bbox_inches='tight')
             plt.close(g.fig)
         else:
             plt.show()
@@ -379,11 +387,10 @@ class Visualizer:
 
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{cat_col}_and_{num_col}_boxplot.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_col}_and_{num_col}_boxplot.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
-
 
     ################################ Violin Plot (Num - Cat)
     @staticmethod
@@ -394,7 +401,7 @@ class Visualizer:
         plt.title(f"{cat_col} Vs. {num_col}", y=1.05, size=20)
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{cat_col}_and_{num_col}_violinplot.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_col}_and_{num_col}_violinplot.png"), bbox_inches='tight')
             plt.close(fig)
         else:
             plt.show()
@@ -412,7 +419,7 @@ class Visualizer:
         g.axes[0,0].set_ylabel(cat_col)
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{cat_col}_and_{num_col}_ridgePlot.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_col}_and_{num_col}_ridgePlot.png"), bbox_inches='tight')
             plt.close(g.fig)
         else:
             plt.show()
@@ -440,11 +447,10 @@ class Visualizer:
 
             if folder_name:
                 plt.ioff()
-                plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{i}_parallel_plot.png"), bbox_inches='tight')
+                plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{i}_parallel_plot.png"), bbox_inches='tight')
                 plt.close(fig)
             else:
                 plt.show()
-
 
     ############################################ Radar Plot
     @staticmethod
@@ -479,7 +485,7 @@ class Visualizer:
         plt.tight_layout()
         if folder_name:
             plt.ioff()
-            plt.savefig(os.path.join(os.getcwd(), "visualizer", folder_name, f"{cat_col}_radar_plot.png"), bbox_inches='tight')
+            plt.savefig(os.path.join(os.getcwd(), Visualizer.DIR_PATHS["root"], folder_name, f"{cat_col}_radar_plot.png"), bbox_inches='tight')
             plt.close()
         else:
             plt.show()
@@ -488,54 +494,58 @@ class Visualizer:
     #        Uni-variate Target         #
     #####################################
     def visualize_target(self, use_count_plot=True, use_pie_plot=True, use_hist_plot=True, use_kde_plot=True):
-        create_folder(folder_name=os.path.join('visualizer', '1_target'), verbose=False)
+        if self.target_col:
+            create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["1_uni_target"]), verbose=False)
 
-        if self.problem_type.startswith('clas'):
-            if use_count_plot: self.create_count_plot(df=self.df, cat_col=self.target_col, folder_name='1_target')
-            if use_pie_plot: self.create_pie_plot(df=self.df, cat_col=self.target_col, folder_name='1_target')
+            if self.problem_type.startswith('clas'):
+                if use_count_plot: self.create_count_plot(df=self.df, cat_col=self.target_col, folder_name=Visualizer.DIR_PATHS["1_uni_target"])
+                if use_pie_plot: self.create_pie_plot(df=self.df, cat_col=self.target_col, folder_name=Visualizer.DIR_PATHS["1_uni_target"])
+            else:
+                if use_hist_plot: self.create_hist_plot(df=self.df, num_col=self.target_col, folder_name=Visualizer.DIR_PATHS["1_uni_target"])
+                if use_kde_plot: self.create_kde_plot(df=self.df, num_col=self.target_col, folder_name=Visualizer.DIR_PATHS["1_uni_target"])
+            print(f'\r{bg("Uni-variate Target", type="s", color="blue")}: {colored(f"100.0%", attrs=["blink"])}')
         else:
-            if use_hist_plot: self.create_hist_plot(df=self.df, num_col=self.target_col, folder_name='1_target')
-            if use_kde_plot: self.create_kde_plot(df=self.df, num_col=self.target_col, folder_name='1_target')
-        print(f'\r{bg("Uni-variate Target", type="s", color="blue")}: {colored(f"100.0%", attrs=["blink"])}')
+            print(f"You MUST declare the 'target_col' in order to use this method.")
 
     #####################################
     #      Uni-variate Categorical      #
     #####################################
     def visualize_cat(self, use_count_plot=True, use_wordcloud=True, use_hist_for_high_cardinality=True):
-        create_folder(folder_name=os.path.join('visualizer', '2_cat_features'), verbose=False)
+        if use_count_plot or use_wordcloud or use_hist_for_high_cardinality:
+            create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["2_uni_cat"]), verbose=False)
 
         for i, col in enumerate(self.cat_cols):
             percent = 100.*(i+1)/self.len_cats
             print(f'\r{bg("Uni-variate Cat", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='') 
             unique_len = len(self.df[col].unique())
             if unique_len <= 27:
-                if use_count_plot: self.create_count_plot(df=self.df, cat_col=col, folder_name='2_cat_features')
+                if use_count_plot: self.create_count_plot(df=self.df, cat_col=col, folder_name=Visualizer.DIR_PATHS["2_uni_cat"])
             else:
-                if use_wordcloud: self.create_wordcloud(df=self.df, cat_col=col, folder_name='2_cat_features')
-                if use_hist_for_high_cardinality: self.create_hist_for_high_cardinality(df=self.df, cat_col=col, folder_name='2_cat_features')
+                if use_wordcloud: self.create_wordcloud(df=self.df, cat_col=col, folder_name=Visualizer.DIR_PATHS["2_uni_cat"])
+                if use_hist_for_high_cardinality: self.create_hist_for_high_cardinality(df=self.df, cat_col=col, folder_name=Visualizer.DIR_PATHS["2_uni_cat"])
         print()
 
     #####################################
     #      uni-variate numerical        #
     #####################################
     def visualize_num(self, use_hist_plot=True, use_kde_plot=True):
-        if use_hist_plot: create_folder(folder_name=os.path.join('visualizer', "3_num_features", "3.1_histogram"), verbose=False)
-        if use_kde_plot: create_folder(folder_name=os.path.join('visualizer', "3_num_features", "3.2_kde"), verbose=False)
+        if use_hist_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["3_uni_num"], "3.1_histogram"), verbose=False)
+        if use_kde_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["3_uni_num"], "3.2_kde"), verbose=False)
 
         for i, col in enumerate(self.num_cols):
             percent = 100.*(i+1)/self.len_nums
             print(f'\r{bg("Uni-variate Num", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
             # TODO: look for an equation on how to set the bins properly.
-            if use_hist_plot: self.create_hist_plot(df=self.df, num_col=col, folder_name=os.path.join("3_num_features", "3.1_histogram"))
-            if use_kde_plot: self.create_kde_plot(df=self.df, num_col=col, folder_name=os.path.join("3_num_features", "3.2_kde"))
+            if use_hist_plot: self.create_hist_plot(df=self.df, num_col=col, folder_name=os.path.join(Visualizer.DIR_PATHS["3_uni_num"], "3.1_histogram"))
+            if use_kde_plot: self.create_kde_plot(df=self.df, num_col=col, folder_name=os.path.join(Visualizer.DIR_PATHS["3_uni_num"], "3.2_kde"))
         print()
 
     ########################################
     #    Bi-variate numerical with index   #
     ########################################
     def visualize_num_with_idx(self, use_line_plot=True, use_point_plot=True):
-        if use_line_plot: create_folder(folder_name=os.path.join('visualizer', "4_index", "1_num_features", "1_line"), verbose=False)
-        if use_point_plot: create_folder(folder_name=os.path.join('visualizer', "4_index", "1_num_features", "2_points"), verbose=False)
+        if use_line_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["5_num_with_idx"], "1_line"), verbose=False)
+        if use_point_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["5_num_with_idx"], "2_points"), verbose=False)
 
         for i, col in enumerate(self.num_cols):
             percent = 100.*(i+1)/self.len_nums
@@ -543,13 +553,13 @@ class Visualizer:
             if use_line_plot:
                 self.create_line_with_index(df=self.df,
                                           num_col=col,
-                                          target_col=self.target_col if self.problem_type.startswith("class") else None,
-                                          folder_name=os.path.join("1_num_features", "1_line"))
+                                          target_col=None,
+                                          folder_name=os.path.join(Visualizer.DIR_PATHS["5_num_with_idx"], "1_line"))
             if use_point_plot:
                 self.create_point_with_index(df=self.df,
                                            num_col=col,
-                                           target_col=self.target_col if self.problem_type.startswith("class") else None, 
-                                           folder_name=os.path.join("1_num_features", "2_points"))
+                                           target_col=None, 
+                                           folder_name=os.path.join(Visualizer.DIR_PATHS["5_num_with_idx"], "2_points"))
         print()
 
     ########################################
@@ -557,15 +567,15 @@ class Visualizer:
     ########################################
     def visualize_cat_with_idx(self, use_point_plot=True):
         if use_point_plot: 
-            create_folder(folder_name=os.path.join('visualizer', "4_index", "2_cat_features"), verbose=False)
+            create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["4_cat_with_idx"]), verbose=False)
 
             for i, col in enumerate(self.cat_cols):
                 percent = 100.*(i+1)/self.len_cats
                 print(f'\r{bg("Bi-variate Cat with Index", type="s", color="blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
                 self.create_point_with_index(df=self.df,
                                            num_col=col,
-                                           target_col=self.target_col if self.problem_type.startswith("class") else None, 
-                                           folder_name='2_cat_features')
+                                           target_col=None, 
+                                           folder_name=Visualizer.DIR_PATHS["4_cat_with_idx"])
             print()
 
     ########################################
@@ -573,7 +583,7 @@ class Visualizer:
     ########################################
     def visualize_cat_with_cat(self, use_clustered_plot=True, use_bubble_plot=True):
         if use_clustered_plot or use_bubble_plot:
-            create_folder(folder_name=os.path.join('visualizer', '5_cat_with_cat'), verbose=False)
+            create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["6_cat_with_cat"]), verbose=False)
 
         comb_len = ncr(len(self.cat_cols), 2)
         for i, (cat_1, cat_2) in enumerate(combinations(self.cat_cols, 2)):
@@ -583,15 +593,16 @@ class Visualizer:
             uniques_len_1 = len(self.df[cat_1].unique())
             uniques_len_2 = len(self.df[cat_2].unique())
             if uniques_len_1 * uniques_len_2 <= 30:
-                if use_clustered_plot: self.create_clustered_bar_plot(df=self.df, cat_1=cat_1, cat_2=cat_2, folder_name="5_cat_with_cat")
-                if use_bubble_plot: self.create_bubble_plot(df=self.df, cat_1=cat_1, cat_2=cat_2, folder_name="5_cat_with_cat")
+                if use_clustered_plot: self.create_clustered_bar_plot(df=self.df, cat_1=cat_1, cat_2=cat_2, folder_name=Visualizer.DIR_PATHS["6_cat_with_cat"])
+                if use_bubble_plot: self.create_bubble_plot(df=self.df, cat_1=cat_1, cat_2=cat_2, folder_name=Visualizer.DIR_PATHS["6_cat_with_cat"])
         print()
 
     ########################################
     #       Bi-variate num with num        #
     ########################################
     def visualize_num_with_num(self, use_scatter_plot=True, use_density_plot=True):
-        create_folder(folder_name=os.path.join('visualizer', '6_num_with_num'), verbose=False)
+        if use_scatter_plot or use_density_plot:
+            create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["7_num_with_num"]), verbose=False)
 
         comb_len = ncr(len(self.num_cols), 2)
         for i, (num_1, num_2) in enumerate(combinations(self.num_cols, 2)):
@@ -602,18 +613,18 @@ class Visualizer:
                                         num_1=num_1,
                                         num_2=num_2, 
                                         target_col=self.target_col if self.problem_type.startswith("class") else None, 
-                                        folder_name="6_num_with_num")
+                                        folder_name=Visualizer.DIR_PATHS["7_num_with_num"])
             if use_density_plot:
-                self.create_density_plot(df=self.df, num_1=num_1, num_2=num_2, folder_name="6_num_with_num")
+                self.create_density_plot(df=self.df, num_1=num_1, num_2=num_2, folder_name=Visualizer.DIR_PATHS["7_num_with_num"])
         print()
 
     ########################################
     #       Bi-variate Num with Cat        #
     ########################################
     def visualize_num_with_cat(self, use_box_plot=True, use_violin_plot=True, use_ridge_plot=True):
-        if use_box_plot: create_folder(folder_name=os.path.join('visualizer', "7_num_with_cat", "1_box_plot"), verbose=False)
-        if use_violin_plot: create_folder(folder_name=os.path.join('visualizer', "7_num_with_cat", "2_violin_plot"), verbose=False)
-        if use_ridge_plot: create_folder(folder_name=os.path.join('visualizer', "7_num_with_cat", "3_ridge_plot"), verbose=False)
+        if use_box_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], "7_num_with_cat", "1_box_plot"), verbose=False)
+        if use_violin_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], "7_num_with_cat", "2_violin_plot"), verbose=False)
+        if use_ridge_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], "7_num_with_cat", "3_ridge_plot"), verbose=False)
 
         n_plots, i = (self.len_cats * self.len_nums), 0
         for cat_col in self.cat_cols:
@@ -633,7 +644,7 @@ class Visualizer:
     ########################################
     def visualize_cat_with_target(self, use_clustered_plot=True, use_bubble_plot=True, use_box_plot=True, use_violin_plot=True, use_ridge_plot=True):
         if use_clustered_plot or use_bubble_plot or use_box_plot or use_violin_plot or use_ridge_plot:
-            create_folder(folder_name=os.path.join('visualizer', '8_cat_with_target'), verbose=False)
+            create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["9_cat_with_target"]), verbose=False)
 
         # If the problem type is classification, then it's cat with cat.
         # else it's cats with num
@@ -645,13 +656,13 @@ class Visualizer:
                 uniques_len_1 = len(self.df[self.target_col].unique())
                 uniques_len_2 = len(self.df[cat_col].unique())
                 if uniques_len_1 * uniques_len_2 <= 30:
-                    if use_clustered_plot: self.create_clustered_bar_plot(df=self.df, cat_1=cat_col, cat_2=self.target_col, folder_name="8_cat_with_target")
-                    if use_bubble_plot: self.create_bubble_plot(df=self.df, cat_1=cat_col, cat_2=self.target_col, folder_name="8_cat_with_target")
+                    if use_clustered_plot: self.create_clustered_bar_plot(df=self.df, cat_1=cat_col, cat_2=self.target_col, folder_name=Visualizer.DIR_PATHS["9_cat_with_target"])
+                    if use_bubble_plot: self.create_bubble_plot(df=self.df, cat_1=cat_col, cat_2=self.target_col, folder_name=Visualizer.DIR_PATHS["9_cat_with_target"])
 
         else:
-            if use_box_plot: create_folder(folder_name=os.path.join('visualizer', "8_cat_with_target", "1_box_plot"), verbose=False)
-            if use_violin_plot: create_folder(folder_name=os.path.join('visualizer', "8_cat_with_target", "2_violin_plot"), verbose=False)
-            if use_ridge_plot: create_folder(folder_name=os.path.join('visualizer', "8_cat_with_target", "3_ridge_plot"), verbose=False)
+            if use_box_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["9_cat_with_target"], "1_box_plot"), verbose=False)
+            if use_violin_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["9_cat_with_target"], "2_violin_plot"), verbose=False)
+            if use_ridge_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["9_cat_with_target"], "3_ridge_plot"), verbose=False)
 
             i =  0
             for cat_col in self.cat_cols:
@@ -659,9 +670,9 @@ class Visualizer:
                 print(f'\r{bg("Bi-variate Cat with Target", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
 
                 if len(self.df[cat_col].unique()) <= 27:
-                    if use_box_plot: self.create_box_plot(df=self.df, cat_col=cat_col, num_col=self.target_col, folder_name=os.path.join("8_cat_with_target", "1_box_plot"))
-                    if use_violin_plot: self.create_violin_plot(df=self.df, cat_col=cat_col, num_col=self.target_col, folder_name=os.path.join("8_cat_with_target", "2_violin_plot"))
-                    if use_ridge_plot: self.create_ridge_plot(df=self.df, cat_col=cat_col, num_col=self.target_col, folder_name=os.path.join("8_cat_with_target", "3_ridge_plot"))
+                    if use_box_plot: self.create_box_plot(df=self.df, cat_col=cat_col, num_col=self.target_col, folder_name=os.path.join(Visualizer.DIR_PATHS["9_cat_with_target"], "1_box_plot"))
+                    if use_violin_plot: self.create_violin_plot(df=self.df, cat_col=cat_col, num_col=self.target_col, folder_name=os.path.join(Visualizer.DIR_PATHS["9_cat_with_target"], "2_violin_plot"))
+                    if use_ridge_plot: self.create_ridge_plot(df=self.df, cat_col=cat_col, num_col=self.target_col, folder_name=os.path.join(Visualizer.DIR_PATHS["9_cat_with_target"], "3_ridge_plot"))
                 i += 1
         print()
 
@@ -671,19 +682,19 @@ class Visualizer:
     ########################################
     def visualize_num_with_target(self, use_box_plot=True, use_violin_plot=True, use_kde_plot=True, use_scatter_plot=True, use_density_plot=True):
         if use_box_plot or use_violin_plot or use_kde_plot or use_scatter_plot or use_density_plot:
-            create_folder(folder_name=os.path.join('visualizer', '9_num_with_target'), verbose=False)
+            create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["10_num_with_target"]), verbose=False)
 
         if self.problem_type.startswith('class'):
-            if use_box_plot: create_folder(folder_name=os.path.join('visualizer', "9_num_with_target", "1_box_plot"), verbose=False)
-            if use_violin_plot: create_folder(folder_name=os.path.join('visualizer', "9_num_with_target", "2_violin_plot"), verbose=False)
-            if use_kde_plot: create_folder(folder_name=os.path.join('visualizer', "9_num_with_target", "3_kde_plot"), verbose=False)
+            if use_box_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["10_num_with_target"], "1_box_plot"), verbose=False)
+            if use_violin_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["10_num_with_target"], "2_violin_plot"), verbose=False)
+            if use_kde_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["10_num_with_target"], "3_kde_plot"), verbose=False)
 
             for i, num_col in enumerate(self.num_cols):
                 percent = 100.*(i+1)/self.len_nums
                 print(f'\r{bg("Bi-variate Num with Target", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
-                if use_box_plot: self.create_box_plot(df=self.df, cat_col=self.target_col, num_col=num_col, folder_name=os.path.join("9_num_with_target", "1_box_plot"))
-                if use_violin_plot: self.create_violin_plot(df=self.df, cat_col=self.target_col, num_col=num_col, folder_name=os.path.join("9_num_with_target", "2_violin_plot"))
-                if use_kde_plot: self.create_kde_plot(df=self.df, num_col=num_col, target_col=self.target_col, folder_name=os.path.join("9_num_with_target", "3_kde_plot"))
+                if use_box_plot: self.create_box_plot(df=self.df, cat_col=self.target_col, num_col=num_col, folder_name=os.path.join(Visualizer.DIR_PATHS["10_num_with_target"], "1_box_plot"))
+                if use_violin_plot: self.create_violin_plot(df=self.df, cat_col=self.target_col, num_col=num_col, folder_name=os.path.join(Visualizer.DIR_PATHS["10_num_with_target"], "2_violin_plot"))
+                if use_kde_plot: self.create_kde_plot(df=self.df, num_col=num_col, target_col=self.target_col, folder_name=os.path.join(Visualizer.DIR_PATHS["10_num_with_target"], "3_kde_plot"))
 
         else:
             for i, num_col in enumerate(self.num_cols):
@@ -693,9 +704,9 @@ class Visualizer:
                     self.create_scatter_plot(df=self.df,
                                         num_1=num_col,
                                         num_2=self.target_col, 
-                                        folder_name="9_num_with_target")
+                                        folder_name=Visualizer.DIR_PATHS["10_num_with_target"])
                 if use_density_plot:
-                    self.create_density_plot(df=self.df, num_1=num_col, num_2=self.target_col, folder_name="9_num_with_target")
+                    self.create_density_plot(df=self.df, num_1=num_col, num_2=self.target_col, folder_name=Visualizer.DIR_PATHS["10_num_with_target"])
         print() 
 
 
@@ -704,22 +715,22 @@ class Visualizer:
     #             Multi-variate            #
     ########################################
     def visualize_multi_variate(self, use_parallel_plot=True, use_radar_plot=True):
-        if use_parallel_plot: create_folder(folder_name=os.path.join('visualizer', "10_multi_variate", "1_parallel_plot"), verbose=False)
-        if use_radar_plot: create_folder(folder_name=os.path.join('visualizer', "10_multi_variate", "2_radar_plot"), verbose=False)
+        if use_parallel_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["11_multi_variate"], "1_parallel_plot"), verbose=False)
+        if use_radar_plot: create_folder(folder_name=os.path.join(Visualizer.DIR_PATHS["root"], Visualizer.DIR_PATHS["11_multi_variate"], "2_radar_plot"), verbose=False)
 
         num_cols_with_target = self.num_cols + [self.target_col] if self.problem_type.startswith('reg') else self.num_cols
         if use_parallel_plot:
             self.create_parallel_plot(df=self.df,
                                   num_cols=num_cols_with_target,
                                   target_col=self.target_col if self.problem_type.startswith("class") else None,
-                                  folder_name=os.path.join("10_multi_variate", "1_parallel_plot"))
+                                  folder_name=os.path.join(Visualizer.DIR_PATHS["11_multi_variate"], "1_parallel_plot"))
 
         if use_radar_plot:
             for i, cat_col in enumerate(self.cat_cols):
                 percent = 100.*(i+1)/self.len_cats
                 print(f'\r{bg("Multi-variate Nums with Cat", "s", "blue")}: {colored(f"{percent:.1f}%", attrs=["blink"])}', end='')
                 if len(self.df[cat_col].unique()) <= 30:
-                    self.create_radar_plot(df=self.df, num_cols=num_cols_with_target, cat_col=cat_col, folder_name=os.path.join("10_multi_variate", "2_radar_plot"))
+                    self.create_radar_plot(df=self.df, num_cols=num_cols_with_target, cat_col=cat_col, folder_name=os.path.join(Visualizer.DIR_PATHS["11_multi_variate"], "2_radar_plot"))
 
 
 
@@ -729,7 +740,7 @@ class Visualizer:
                             use_point_plot=True, use_clustered_plot=True, use_bubble_plot=True,
                             use_scatter_plot=True, use_density_plot=True, use_box_plot=True, use_violin_plot=True,
                             use_ridge_plot=True, use_parallel_plot=True, use_radar_plot=True):
-        self.visualize_target(use_count_plot=use_count_plot, use_pie_plot=use_pie_plot, use_hist_plot=use_hist_plot, use_kde_plot=use_kde_plot)
+        if self.target_col: self.visualize_target(use_count_plot=use_count_plot, use_pie_plot=use_pie_plot, use_hist_plot=use_hist_plot, use_kde_plot=use_kde_plot)
         self.visualize_cat(use_count_plot=use_count_plot, use_wordcloud=use_wordcloud, use_hist_for_high_cardinality=use_hist_for_high_cardinality)
         self.visualize_num(use_hist_plot=use_hist_plot, use_kde_plot=use_kde_plot)
         self.visualize_num_with_idx(use_line_plot=use_line_plot, use_point_plot=use_point_plot)
@@ -737,6 +748,7 @@ class Visualizer:
         self.visualize_cat_with_cat(use_clustered_plot=use_clustered_plot, use_bubble_plot=use_bubble_plot)
         self.visualize_num_with_num(use_scatter_plot=use_scatter_plot, use_density_plot=use_density_plot)
         self.visualize_num_with_cat(use_box_plot=use_box_plot, use_violin_plot=use_violin_plot, use_ridge_plot=use_ridge_plot)
-        self.visualize_cat_with_target(use_clustered_plot=use_clustered_plot, use_bubble_plot=use_bubble_plot, use_box_plot=use_box_plot, use_violin_plot=use_violin_plot, use_ridge_plot=use_ridge_plot)
-        self.visualize_num_with_target(use_box_plot=use_box_plot, use_violin_plot=use_violin_plot, use_kde_plot=use_kde_plot, use_scatter_plot=use_scatter_plot, use_density_plot=use_density_plot)
+        if self.target_col:
+            self.visualize_cat_with_target(use_clustered_plot=use_clustered_plot, use_bubble_plot=use_bubble_plot, use_box_plot=use_box_plot, use_violin_plot=use_violin_plot, use_ridge_plot=use_ridge_plot)
+            self.visualize_num_with_target(use_box_plot=use_box_plot, use_violin_plot=use_violin_plot, use_kde_plot=use_kde_plot, use_scatter_plot=use_scatter_plot, use_density_plot=use_density_plot)
         self.visualize_multi_variate(use_parallel_plot=use_parallel_plot, use_radar_plot=use_radar_plot)
