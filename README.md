@@ -1,5 +1,4 @@
 # Visualizer:
-[![PyPI version](https://badge.fury.io/py/entity-embeddings-categorical.svg)](https://pypi.org/project/visualizer/)
 [![GitHub](https://img.shields.io/github/license/bresan/entity_embeddings_categorical.svg)](https://github.com/bresan/entity_embeddings_categorical/blob/master/LICENSE.md)
 
 **Visualizer** is a Python package that automates the process of visualization and facilitates the plotting of any individual relationship between multiple-columns.
